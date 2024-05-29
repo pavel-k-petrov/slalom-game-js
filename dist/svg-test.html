@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <link
+      rel="stylesheet"
+      href="./slalom-game.css"
+      type="text/css"
+      media="all"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <div class="map-wrapper">
+        <div class="map">
+          <svg id="map-svg">
+            <g transform="translate(600,400) scale(0.4)">
+              <line
+                x1="0"
+                y1="0"
+                x2="500"
+                y2="500"
+                stroke="blue"
+                stroke-width="1"
+              />
+              <circle
+                cx="100"
+                cy="50"
+                r="5"
+                stroke="red"
+                stroke-width="1"
+                transform="translate(100, 50) rotate(45)"
+              />
+              <circle cx="200" cy="100" r="5" stroke="green" stroke-width="1" />
+              <circle
+                cx="100"
+                cy="50"
+                r="7"
+                stroke="brown"
+                stroke-width="1"
+                fill="none"
+              />
+              <path
+                stroke-width="1"
+                stroke="black"
+                fill-opacity="0.3"
+                d="
+            M-603.5130914751536,-595.7568461393915 L-320.67038147515365,-728.3393761393914 A15,15 0 0,0 -333.4033985248463,-755.5031438606084 L-616.2461085248464,-622.9206138606086 A15,15 0 0,1 -616.2461085248462,-622.9206138606085 z"
+              />
+            </g>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
