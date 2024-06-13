@@ -27,13 +27,14 @@ bugfix и улучшательства
 + анимация поворота через 90*, нужно использовать разницу углов для подсчёта
 + refactor
 + collision c кружком вместо точки
++ рассчитывать zoom по-умному - чтобы всё динамическое и каякер тоже влезало на экран
 - работа на мобилке
-- рассчитывать zoom по-умному - чтобы всё динамическое и каякер тоже влезало на экран
 + Авдотские декорации
 - сделать снос при наезде на границу
 - проверить пересечение финиша
 - сделать пропуск хода (2?) при наезде на границу
 - выводить скорость течения и(или) следующий круг выбора ход при предварительном выборе
++ показывать направление на следующие ворота если их не видно
 - учитывать заход а не только выход при отсуживании ворот (сейчас можно коснуться линии не с той стороны и выйти назад и получить зачёт)
 + анимация взятия ворот и вешек
 - после финиша трассы выдавать бухло)
@@ -42,24 +43,16 @@ bugfix и улучшательства
     разницу течений вычитать из скорости если против течения?
     похоже надо вводить в формулу угол поворота
 - (opt) убрать управление на время анимации
-- refactor 2
+- refactor 2 (draw)
 */
 
-import { GateVisualization } from "./gate-visualization";
+import { GateVisualization, Viewport } from "./gate-visualization";
 import { CollisionSystem } from "./collision-system";
 import Snap from "snapsvg";
 import { GameScore, GameScoreVisualization } from "./game-score";
 import { Vector, point, segment } from "@flatten-js/core";
 import { Player, PossibleTarget } from "./player";
 
-
-class Viewport {
-  offsetX: number = 0;
-  offsetY: number = 0;
-  viewCenterX: number = 500;
-  viewCenterY: number = 300;
-  zoom: number = 0.5;
-}
 
 $(function () {
   const svg = Snap('#map-svg');
@@ -102,16 +95,17 @@ $(function () {
     gateVisualization.DrawGateCollisions(scoredGatesCollisions, point(player.x, player.y));
     possibleTarget = player.calculateTarget();
     draw(true);
+    gateVisualization.DrawNextGateMarkIfNeeded(gameScore.getNextGate(), viewport, 500);
   }
 
   function draw(isAnimated?: boolean) {
     const playerSvg = svg.select('#player');
-    const zoom = 1;
+    const baseZoom = 1;
     viewport = {
       ...viewport,
       offsetX: possibleTarget.centerX,
       offsetY: possibleTarget.centerY,
-      zoom,
+      zoom: baseZoom,
     };
 
     const targetMask = svg.select('#target-mask circle');
@@ -126,9 +120,8 @@ $(function () {
       cx: possibleTarget.centerX,
       cy: possibleTarget.centerY,
     });
-    if (Math.abs(player.y - possibleTarget.centerY) > 200) {
-      viewport.zoom = Math.min(viewport.zoom, 200 / Math.abs(player.y - possibleTarget.centerY));
-    }
+
+    viewport.zoom = calcViewportZoom();
     const viewportTransform = `translate(${viewport.viewCenterX}, ${viewport.viewCenterY}) scale(${viewport.zoom}) translate(${-viewport.offsetX}, ${-viewport.offsetY})`
 
     const speed = Math.sqrt(
@@ -178,6 +171,19 @@ $(function () {
       );
       svg.select('#viewport').transform(`${viewportTransform}`);
     }
+  }
+
+  function calcViewportZoom(): number {
+    let zoom = 1.0; //???
+    const head = player.head();
+
+    const delatX = Math.abs(head.center.x - possibleTarget.centerX) + head.r;
+    const delatY = Math.abs(head.center.y - possibleTarget.centerY) + head.r;
+    const zoomX = delatX <= viewport.viewCenterX ? 1 : viewport.viewCenterX / delatX;
+    const zoomY = delatY <= viewport.viewCenterY ? 1 : viewport.viewCenterY / delatY;
+
+    zoom = Math.min(zoomX, zoomY);
+    return zoom;
   }
 
   function normalizeAngle(a: number): number {

@@ -13,7 +13,7 @@
       media="all"
     />
     <script src="./jquery-3.7.1.slim.min.js"></script>
-    <script src="./slalom-game-bundle.js"></script>
+    <script src="./slalom-game-bundle.js?v=2"></script>
   </head>
   <body>
     <div class="debug">
@@ -50434,6 +50434,12 @@
                 <circle cx="0" cy="0" fill="red" r="10" />
               </g>
               <g id="-debug" fill-opacity="0.3"></g>
+            </g>
+            <g id="next-gate-direction" transform="translate(200,200)" stroke="red" stroke-width="3" stroke-opacity="0.5" fill="red" visibility="hidden">
+              <line x1="-15" y1="20" x2="-15" y2="-20" stroke-dasharray="10 5"/>
+              <line x1="15" y1="20" x2="15" y2="-20" stroke-dasharray="10 5"/>
+              <line x1="-15" y1="-20" x2="15" y2="-20" stroke-width="5"/>
+              <text text-anchor="middle" x="0" y="5">18</text>
             </g>
             <g id="finished-label" visibility="visible">
               <text stroke="black" fill="black" y="30"></text>

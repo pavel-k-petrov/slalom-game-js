@@ -1,14 +1,25 @@
-import { Point, Segment, Vector, point, segment } from "@flatten-js/core";
+import { Box, Point, Segment, Vector, matrix, point, segment } from "@flatten-js/core";
 import { GateCollision, gatePoleRadius as GatePoleRadius } from "./collision-system";
+import { Matrix } from "snapsvg";
+
+export class Viewport {
+    offsetX: number = 0;
+    offsetY: number = 0;
+    viewCenterX: number = 500;
+    viewCenterY: number = 300;
+    zoom: number = 0.5;
+}
+
 
 type GateElements = {
-    gateNumber: number,
+    gateNumber: number | 'finish',
     group: Snap.Element,
     line: Snap.Element,
     rightPole: Snap.Element,
     leftPole: Snap.Element,
 
     gateSegment: Segment,
+    color: string,
 
     lineMark?: Snap.Element,
     rightPoleMark?: Snap.Element,
@@ -17,11 +28,58 @@ type GateElements = {
 
 export class GateVisualization {
     private gates: GateElements[] = [];
+    private svg: Snap.Paper;
 
     static ApplyToSvg(svg: Snap.Paper): GateVisualization {
         const result = new GateVisualization();
         result.Init(svg);
         return result;
+    }
+
+    public DrawNextGateMarkIfNeeded(
+        nextGateNumber: number | 'finish',
+        viewport: Viewport,
+        animationTime: number) {
+        const gate = this.gates.find(x => x.gateNumber == nextGateNumber);
+        const markSvg = this.svg.select("#next-gate-direction");
+        const viewportGate = gate.gateSegment
+            .translate(-viewport.offsetX, -viewport.offsetY)
+            .scale(viewport.zoom, viewport.zoom)
+            .translate(viewport.viewCenterX, viewport.viewCenterY);
+
+        const markOffsetX = 20;
+        const markOffsetY = 25;
+        const viewportRect = new Box(
+            markOffsetX,
+            markOffsetY,
+            viewport.viewCenterX * 2 - markOffsetX,
+            viewport.viewCenterY * 2 - markOffsetY);
+
+        const gateMiddle = viewportGate.middle();
+
+        const gateDirection = segment(
+            point(viewport.viewCenterX, viewport.viewCenterY),
+            gateMiddle);
+
+        const markPositions = gateDirection.intersect(viewportRect);
+
+        if (markPositions.length === 0) {
+            markSvg.attr({ 'visibility': 'hidden' });
+            return;
+        }
+
+        const markWasVisible = markSvg.attr('visibility') === 'visible';
+
+        const markPosition = markPositions[0];
+
+        markSvg.select('text').attr({ text: nextGateNumber });
+        if (!markWasVisible){
+            markSvg
+            .transform(`translate(${gateMiddle.x}, ${gateMiddle.y})`)
+        }
+        markSvg
+            .attr({ 'visibility': 'visible', text: nextGateNumber, stroke: gate.color, fill: gate.color });
+        markSvg.animate({ transform: `translate(${markPosition.x}, ${markPosition.y})` }, animationTime);
     }
 
     public DrawGateCollisions(collisions: GateCollision[], fromPoint?: Point) {
@@ -59,6 +117,7 @@ export class GateVisualization {
     }
 
     private Init(svg: Snap.Paper) {
+        this.svg = svg;
         const root = svg.select("#gates-visualization");
         const positions = svg.selectAll(".gate-position");
         positions.forEach((el, idx) => {
@@ -75,6 +134,7 @@ export class GateVisualization {
     }
     private DrawFinish(svg: Snap.Paper, ref: Snap.Element): GateElements {
         const gate = this.DrawGenericGate(svg, ref);
+        gate.gateNumber = 'finish';
         const color = ref.node.getAttribute("stroke");
         const lineVector = new Vector(gate.gateSegment.ps, gate.gateSegment.pe);
         const middle = gate.gateSegment.middle();
@@ -156,6 +216,7 @@ export class GateVisualization {
             rightPole,
             line,
             gateSegment,
+            color,
         };
     }
 }
